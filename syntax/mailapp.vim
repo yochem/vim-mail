@@ -5,9 +5,9 @@
 "
 
 if version < 600
-	syn clear
+    syn clear
 elseif exists("b:current_syntax")
-	finish
+    finish
 endif
 
 syn case ignore

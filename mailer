@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+
+import argparse
+import configparser
+import smtplib
+import subprocess
+import sys
+import os
+import re
+
+from email.message import EmailMessage
+
+def load_settings(different_mail=None):
+    """
+    Load mail address data from the config file. Location:
+    XDG_CONFIG_HOME/mailer/mailerrc with default location being
+    ~/.config/mailer/mailerrc.
+    """
+    # check on XDG_CONFIG_HOME, else set location to default
+    try:
+        config_file = os.environ['XDG_CONFIG_HOME'] + '/mailer/mailerrc'
+    except KeyError:
+        config_file = os.path.expanduser('~') + '/.config/mailer/mailerrc'
+
+    # if not found at XDG_CONFIG_HOME and the default path, raise an error
+    if not os.path.isfile(config_file):
+        raise FileNotFoundError('No config file found.')
+
+    # start parsing the file
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    try:
+        if different_mail:
+            mail_addr = different_mail
+        else:
+            mail_addr = config.sections()[0]
+    except IndexError as e:
+        raise e
+
+    try:
+        appleid = config[mail_addr]['apple_id']
+    except KeyError:
+        raise KeyError('No Apple ID account added')
+
+    return mail_addr, appleid
+
+
+def send_mail(args, from_addr, appleid):
+    """
+    Create the mail and send it with iCloud mail.
+
+    Parameters:
+    args: [
+        to: reciever of mail
+        subject: subject of mail
+        body: content of mail
+    ]
+    from_addr: address of sender checked in the config file
+    appleid: account on the server for which the keychain password is
+             retrieved.
+    """
+    msg = EmailMessage()
+    msg['From'] = from_addr
+    msg['To'] = args.to
+    msg['Subject'] = args.subject
+    msg.set_content(args.body)
+
+    with smtplib.SMTP('smtp.mail.me.com', 587) as smtp:
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+
+        smtp.login(from_addr, get_keychain_pass(appleid))
+
+        smtp.send_message(msg)
+
+
+# original source:
+# https://github.com/OfflineIMAP/offlineimap/blob/master/contrib/store-pw-with-gpg/gpg-pw.py
+# but modified
+def get_keychain_pass(account):
+    """Mac OSX keychain password extraction. This function is a modified
+    version of https://github.com/OfflineIMAP/offlineimap/blob/master/contrib/
+    store-pw-with-gpg/gpg-pw.py.
+
+    Parameters:
+    account: Apple ID for which the keychain password is
+             retrieved.
+    """
+    params = {
+        'security': '/usr/bin/security',
+        'command': 'find-internet-password',
+        'account': account,
+        'server': 'appleid.apple.com',
+        'keychain': os.path.expanduser('~') +
+                    '/Library/Keychains/login.keychain',
+    }
+    command = ('%(security)s -v %(command)s'
+               ' -g -a %(account)s -s %(server)s %(keychain)s' % params)
+    output = subprocess.check_output(
+        command, shell=True, stderr=subprocess.STDOUT)
+
+    pw = [str(l) for l in output.splitlines() if str(l).startswith('b\'pass')][0]
+
+    return find_password(pw)
+
+def find_password(text):
+    """Helper method for osx password extraction."""
+    # a non-capturing group
+    r = re.match(r'b\'password: (?:0x[A-F0-9]+  )?"(.*)"', text)
+    if r:
+        return r.group(1)
+    else:
+        return None
+
+if __name__ == '__main__':
+    # parse all given arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--from_addr', default=None)
+    parser.add_argument('--to', required=True)
+    parser.add_argument('--subject', required=True)
+    parser.add_argument('--body', required=True)
+    args = parser.parse_args()
+
+    # load the settings with given email or use default
+    from_addr, appleid = load_settings(args.from_addr)
+
+    send_mail(args, from_addr, appleid)
