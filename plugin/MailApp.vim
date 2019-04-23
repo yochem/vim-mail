@@ -19,9 +19,9 @@ function! s:debug(msg) " {{{
     endif
 endfunction " }}}
 function! MailAppInit() " {{{
-    let s:command_name = "mailapp"
+    let s:command_name = "mailer"
     if !exists("g:MailApp_bundle")
-        let s:mailcommand = expand('~/Documents/MailApp.bundle/') . s:command_name
+        let s:mailcommand = expand('~/dev/vim-mail/') . s:command_name
     else
         if g:MailApp_bundle =~# 'MailApp/\=$'
             let s:mailcommand = simplify(substitute(g:MailApp_bundle, '/$','','') . '.bundle/' . s:command_name)
@@ -32,7 +32,7 @@ function! MailAppInit() " {{{
         endif
     endif
     if !filereadable(glob(s:mailcommand))
-        echoerr "MailApp: MailApp.bundle couldn't be found at '" . substitute(s:mailcommand,'\CMailApp.bundle/' . s:command_name,'','') . "', make sure it is in your 'Documents' folder or read ':help MailApp_bundle' if you placed it somewhere else."
+        echoerr "MailApp: mailer couldn't be found at '" . substitute(s:mailcommand,'\CMailApp.bundle/' . s:command_name,'','')
         return 0
     endif
     let s:args = ""
@@ -229,42 +229,44 @@ endfunction " }}}
 
 function! s:GetArguments() " {{{
     if s:from != ""
-        let from = "-from " . shellescape(s:from, 1) . " "
+        let from = "--from_addr " . shellescape(s:from, 1) . " "
     else
         let from = ""
     endif
     if s:to != ""
-        let to   = "-to " . shellescape(s:to, 1) . " "
+        let to   = "--to " . shellescape(s:to, 1) . " "
     else
         let to = ""
     endif
     if s:cc != ""
-        let cc   = "-cc " . shellescape(s:cc, 1) . " "
+        let cc   = "--cc " . shellescape(s:cc, 1) . " "
     else
         let cc = ""
     endif
     if s:bcc !=""
-        let bcc  = "-bcc " . shellescape(s:bcc, 1) . " "
+        let bcc  = "--bcc " . shellescape(s:bcc, 1) . " "
     else
         let bcc = ""
     endif
     if s:subj != ""
-        let subj = "-subject " . shellescape(s:subj, 1) . " "
+        let subj = "--subject " . shellescape(s:subj, 1) . " "
     else
         let subj = ""
     endif
     if s:att != ""
-        let att  = "-attachment " . shellescape(s:att, 1) . " "
+        let att  = "--attachment " . shellescape(s:att, 1) . " "
     else
         let att = ""
     endif
     if s:body != ""
-        let body = "-body " . shellescape(s:body, 1) . " "
+        let body = "--body " . shellescape(s:body, 1) . " "
     else
         let body = ""
     endif
-    return from . to . cc . bcc . subj . att . body .
-                \    "-send " . s:send . " -visible " . s:visible
+    " return from . to . cc . bcc . subj . att . body .
+    "             \    "-send " . s:send . " -visible " . s:visible
+
+    return from . to . subj . att . body
 endfunction " }}}
 
 function! CompleteEmails(findstart, base) " {{{
@@ -310,7 +312,7 @@ function! MailAppSend() " {{{
     call s:ParseText()
     if s:ValidateEmail() && s:attIsValid
         "echomsg "silent !" . s:mailcommand . " " . s:GetArguments()
-        exec "silent !" . s:mailcommand . " " . s:GetArguments()
+        exec "!" . s:mailcommand . " " . s:GetArguments()
     else
         echomsg "MailApp: The message wasn't sent!"
     endif
@@ -327,7 +329,7 @@ endfunction " }}}
 
 command! NewMailApp call MailAppNew(1)
 "command! MailAppNewV call MailAppNew(0)
-command! SendMailApp call MailAppSend()
-autocmd BufNewFile,BufRead *.mailapp setf mailapp
+command! SendMail call MailAppSend()
+autocmd BufNewFile,BufRead *.mail setf mailapp
 
 " vim:foldmethod=marker:foldcolumn=2

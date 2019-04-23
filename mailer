@@ -39,14 +39,19 @@ def load_settings(different_mail=None):
         raise e
 
     try:
-        appleid = config[mail_addr]['apple_id']
+        username = config[mail_addr]['username']
     except KeyError:
-        raise KeyError('No Apple ID account added')
+        raise KeyError('No username added to account')
 
-    return mail_addr, appleid
+    try:
+        server = config[mail_addr]['server']
+    except KeyError:
+        raise KeyError('No server added to account')
+
+    return mail_addr, username, server
 
 
-def send_mail(args, from_addr, appleid):
+def send_mail(args, from_addr, username, server):
     """
     Create the mail and send it with iCloud mail.
 
@@ -57,7 +62,7 @@ def send_mail(args, from_addr, appleid):
         body: content of mail
     ]
     from_addr: address of sender checked in the config file
-    appleid: account on the server for which the keychain password is
+    username: account on the server for which the keychain password is
              retrieved.
     """
     msg = EmailMessage()
@@ -71,7 +76,7 @@ def send_mail(args, from_addr, appleid):
         smtp.starttls()
         smtp.ehlo()
 
-        smtp.login(from_addr, get_keychain_pass(appleid))
+        smtp.login(from_addr, get_keychain_pass(username, server))
 
         smtp.send_message(msg)
 
@@ -79,20 +84,19 @@ def send_mail(args, from_addr, appleid):
 # original source:
 # https://github.com/OfflineIMAP/offlineimap/blob/master/contrib/store-pw-with-gpg/gpg-pw.py
 # but modified
-def get_keychain_pass(account):
+def get_keychain_pass(username, server):
     """Mac OSX keychain password extraction. This function is a modified
     version of https://github.com/OfflineIMAP/offlineimap/blob/master/contrib/
     store-pw-with-gpg/gpg-pw.py.
 
     Parameters:
-    account: Apple ID for which the keychain password is
-             retrieved.
+    account: username for which the keychain password is retrieved.
     """
     params = {
         'security': '/usr/bin/security',
         'command': 'find-internet-password',
-        'account': account,
-        'server': 'appleid.apple.com',
+        'account': username,
+        'server': server,
         'keychain': os.path.expanduser('~') +
                     '/Library/Keychains/login.keychain',
     }
@@ -103,16 +107,12 @@ def get_keychain_pass(account):
 
     pw = [str(l) for l in output.splitlines() if str(l).startswith('b\'pass')][0]
 
-    return find_password(pw)
-
-def find_password(text):
-    """Helper method for osx password extraction."""
-    # a non-capturing group
-    r = re.match(r'b\'password: (?:0x[A-F0-9]+  )?"(.*)"', text)
+    r = re.match(r'b\'password: (?:0x[A-F0-9]+  )?"(.*)"', pw)
     if r:
         return r.group(1)
     else:
         return None
+
 
 if __name__ == '__main__':
     # parse all given arguments
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     parser.add_argument('--body', required=True)
     args = parser.parse_args()
 
-    # load the settings with given email or use default
-    from_addr, appleid = load_settings(args.from_addr)
+    # load the settings with given --from email or use default (first one in conf)
+    from_addr, username, server = load_settings(args.from_addr)
 
-    send_mail(args, from_addr, appleid)
+    send_mail(args, from_addr, username, server)

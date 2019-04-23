@@ -1,8 +1,9 @@
 # vim-mail: send mails from within Vim
 
-A Vim wrapper around a Python3 script to send emails from Vim. Most Vim stuff
-is based on [vim-scripts/MailApp](https://github.com/vim-scripts/MailApp). The
-Python script is made by myself.
+A Vim wrapper around a Python3 script (uses `smtplib`) to send emails from
+Vim. Most Vim stuff is based on
+[vim-scripts/MailApp](https://github.com/vim-scripts/MailApp). The Python
+script is made by myself.
 
 :warning: Currently only works with iCloud mail on MacOS. This is because it
 uses MacOS' Keychain to get the password of the mail account.
@@ -15,7 +16,7 @@ uses MacOS' Keychain to get the password of the mail account.
 
 ## Get Started
 1. Place `mailer` in `$PATH`
-[how](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path)
+([how](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path))
 2. Add a new entry to the Keychain:
    ```
    > keychain acces
