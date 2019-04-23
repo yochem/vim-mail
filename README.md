@@ -5,32 +5,24 @@ Vim. Most Vim stuff is based on
 [vim-scripts/MailApp](https://github.com/vim-scripts/MailApp). The Python
 script is made by myself.
 
-:warning: Currently only works with iCloud mail on MacOS. This is because it
-uses MacOS' Keychain to get the password of the mail account.
-
 ## Requirements
 - configparser (`pip3 install configparser`)
-- an iCloud email address with an app specific password ([How to generate app
-    specific password](imore.com/how-generate-app-specific-passwords-iphone-ipad-mac))
+- an iCloud email address with an app specific password (
+    [iCloud](imore.com/how-generate-app-specific-passwords-iphone-ipad-mac), 
+    [gmail](https://www.lifewire.com/get-a-password-to-access-gmail-by-pop-imap-2-1171882))
 - The email address and password in KeyChain
 
 ## Get Started
-1. Place `mailer` in `$PATH`
-([how](https://stackoverflow.com/questions/20054538/add-a-bash-script-to-path))
-2. Add a new entry to the Keychain:
-   ```
-   > keychain acces
-   > +
-   > Keychain item name: https://appleid.apple.com,
-     Account name: your@appleid.com
-     Password: YOUR_APP_SPECIFIC_PASSWORD
-   > Add
-   ```
+1. Add a new entry to the Keychain: go to the `Keychain Acces` app, click on the `+`
+    button on the left. Keychain Item Name: the server (`appleid.apple.com` for icloud),
+    Account Name: your username, Password: your app specific password.
 3. Create a config file at `~/.config/mailer/mailerrc` with the following
    content:
    ```ini
-   [you@icloud.com]
-   apple_id = your@appleid.com
+   [you@yourmail.com]
+   username = you@yourlogin.com
+   server = appleid.apple.com
+   smtp_server = smtp.mail.me.com <- apple's smtp server
    ```
    Multiple sections are possible for handling multiple accounts.
 
