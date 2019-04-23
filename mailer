@@ -30,28 +30,38 @@ def load_settings(different_mail=None):
     config = configparser.ConfigParser()
     config.read(config_file)
 
+    # store all configs in a dictionary
+    configs = {}
+
     try:
         if different_mail:
             mail_addr = different_mail
         else:
             mail_addr = config.sections()[0]
+        # store mail also in configs dict
+        configs['email'] = mail_addr
     except IndexError as e:
         raise e
 
     try:
-        username = config[mail_addr]['username']
+        configs['username'] = config[mail_addr]['username']
     except KeyError:
-        raise KeyError('No username added to account')
+        raise KeyError('No username added to account, keyword: username')
 
     try:
-        server = config[mail_addr]['server']
+        configs['server'] = config[mail_addr]['server']
     except KeyError:
-        raise KeyError('No server added to account')
+        raise KeyError('No login server added to account, keyword: login')
 
-    return mail_addr, username, server
+    try:
+        configs['smtp_server'] = config[mail_addr]['smtp_server']
+    except KeyError:
+        raise KeyError('No smtp server added to account, keyword: smtp_server')
+
+    return configs
 
 
-def send_mail(args, from_addr, username, server):
+def send_mail(args, config):
     """
     Create the mail and send it with iCloud mail.
 
@@ -66,17 +76,19 @@ def send_mail(args, from_addr, username, server):
              retrieved.
     """
     msg = EmailMessage()
-    msg['From'] = from_addr
+    msg['From'] = config['email']
     msg['To'] = args.to
     msg['Subject'] = args.subject
     msg.set_content(args.body)
 
-    with smtplib.SMTP('smtp.mail.me.com', 587) as smtp:
+    # connect to smtp server and send the mail
+    with smtplib.SMTP(config['smtp_server'], 587) as smtp:
         smtp.ehlo()
         smtp.starttls()
         smtp.ehlo()
 
-        smtp.login(from_addr, get_keychain_pass(username, server))
+        smtp.login(config['email'], get_keychain_pass(config['username'],
+                                                      config['server']))
 
         smtp.send_message(msg)
 
@@ -124,6 +136,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # load the settings with given --from email or use default (first one in conf)
-    from_addr, username, server = load_settings(args.from_addr)
+    configs = load_settings(args.from_addr)
 
-    send_mail(args, from_addr, username, server)
+    send_mail(args, configs)
