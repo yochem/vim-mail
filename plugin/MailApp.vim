@@ -20,16 +20,24 @@ function! s:debug(msg) " {{{
 endfunction " }}}
 function! MailAppInit() " {{{
     let s:command_name = "mailer"
-    if !exists("g:MailApp_bundle")
-        let s:mailcommand = expand('~/dev/vim-mail/') . s:command_name
-    else
-        if g:MailApp_bundle =~# 'MailApp/\=$'
-            let s:mailcommand = simplify(substitute(g:MailApp_bundle, '/$','','') . '.bundle/' . s:command_name)
-        elseif g:MailApp_bundle =~# 'MailApp.bundle/\=$'
-            let s:mailcommand = simplify(g:MailApp_bundle . s:command_name)
+    if !exists("g:mail_script")
+        if !exists("g:plug_home")
+            let s:path = g:vimmail_path
         else
-            let s:mailcommand = simplify(g:MailApp_bundle . '/MailApp.bundle/' . s:command_name)
+            let s:path = g:plug_home
+            if filereadable(glob('~/dev/vim-mail/mailer'))
+                let s:path = '~/dev/vim-mail'
+            endif
         endif
+        let s:mailcommand = expand(s:path) . '/' . s:command_name
+    " else
+    "     if g:mail_script =~# 'MailApp/\=$'
+    "         let s:mailcommand = simplify(substitute(g:mail_script, '/$','','') . '.bundle/' . s:command_name)
+    "     elseif g:mail_script =~# 'MailApp.bundle/\=$'
+    "         let s:mailcommand = simplify(g:mail_script . s:command_name)
+    "     else
+    "         let s:mailcommand = simplify(g:mail_script . '/MailApp.bundle/' . s:command_name)
+    "     endif
     endif
     if !filereadable(glob(s:mailcommand))
         echoerr "MailApp: mailer couldn't be found at '" . substitute(s:mailcommand,'\CMailApp.bundle/' . s:command_name,'','')
@@ -312,7 +320,7 @@ function! MailAppSend() " {{{
     call s:ParseText()
     if s:ValidateEmail() && s:attIsValid
         "echomsg "silent !" . s:mailcommand . " " . s:GetArguments()
-        exec "!" . s:mailcommand . " " . s:GetArguments()
+        exec "silent !" . s:mailcommand . " " . s:GetArguments()
     else
         echomsg "MailApp: The message wasn't sent!"
     endif

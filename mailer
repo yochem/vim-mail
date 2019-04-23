@@ -132,7 +132,7 @@ if __name__ == '__main__':
     parser.add_argument('--from_addr', default=None)
     parser.add_argument('--to', required=True)
     parser.add_argument('--subject', required=True)
-    parser.add_argument('--body', required=True)
+    parser.add_argument('--body')
     args = parser.parse_args()
 
     # load the settings with given --from email or use default (first one in conf)
