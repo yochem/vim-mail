@@ -18,11 +18,12 @@ script is made by myself.
     Account Name: your username, Password: your app specific password.
 3. Create a config file at `~/.config/mailer/mailerrc` with the following
    content:
+   
    ```ini
    [you@yourmail.com]
    username = you@yourlogin.com
    server = appleid.apple.com
-   smtp_server = smtp.mail.me.com <- apple's smtp server
+   smtp_server = smtp.mail.me.com # apple's smtp server
    ```
    Multiple sections are possible for handling multiple accounts.
 
