@@ -35,5 +35,12 @@ Example:
 mailer --to someone@gmail.com --subject Just wanna say hi --body hi.
 ```
 
+##
+Use this alias for creating a new mail quick:
+```bash
+alias newmail='$VISUAL /tmp/vim-mail-$(date +%s).mail'
+```
+It's awesome.
+
 ## Licence
 MIT.
