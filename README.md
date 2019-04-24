@@ -18,7 +18,7 @@ script is made by myself.
     Account Name: your username, Password: your app specific password.
 3. Create a config file at `~/.config/mailer/mailerrc` with the following
    content:
-   
+
    ```ini
    [you@yourmail.com]
    username = you@yourlogin.com
@@ -36,7 +36,7 @@ Example:
 mailer --to someone@gmail.com --subject Just wanna say hi --body hi.
 ```
 
-##
+## Extra tip
 Use this alias for creating a new mail quick:
 ```bash
 alias newmail='$VISUAL /tmp/vim-mail-$(date +%s).mail'
