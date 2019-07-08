@@ -18,9 +18,9 @@ def load_settings(different_mail=None):
     """
     # check on XDG_CONFIG_HOME, else set location to default
     try:
-        config_file = os.environ['XDG_CONFIG_HOME'] + '/mailer/mailerrc'
+        config_file = os.environ['XDG_CONFIG_HOME'] + '/mailer/config'
     except KeyError:
-        config_file = os.path.expanduser('~') + '/.config/mailer/mailerrc'
+        config_file = os.path.expanduser('~') + '/.config/mailer/config'
 
     # if not found at XDG_CONFIG_HOME and the default path, raise an error
     if not os.path.isfile(config_file):
