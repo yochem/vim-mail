@@ -33,30 +33,22 @@ def load_settings(different_mail=None):
     # store all configs in a dictionary
     configs = {}
 
-    try:
-        if different_mail:
-            mail_addr = different_mail
-        else:
+    if different_mail:
+        mail_addr = different_mail
+    else:
+        try:
             mail_addr = config.sections()[0]
-        # store mail also in configs dict
-        configs['email'] = mail_addr
-    except IndexError as e:
-        raise e
+        except IndexError:
+            raise
+    # store mail also in configs dict
+    configs['email'] = mail_addr
 
     try:
         configs['username'] = config[mail_addr]['username']
-    except KeyError:
-        raise KeyError('No username added to account, keyword: username')
-
-    try:
         configs['server'] = config[mail_addr]['server']
-    except KeyError:
-        raise KeyError('No login server added to account, keyword: login')
-
-    try:
         configs['smtp_server'] = config[mail_addr]['smtp_server']
     except KeyError:
-        raise KeyError('No smtp server added to account, keyword: smtp_server')
+        raise
 
     return configs
 
@@ -106,11 +98,11 @@ def get_keychain_pass(username, server):
     """
     params = {
         'security': '/usr/bin/security',
-        'command': 'find-internet-password',
+        'command': 'find-generic-password',
         'account': username,
         'server': server,
         'keychain': os.path.expanduser('~') +
-                    '/Library/Keychains/login.keychain',
+                    '/Library/Keychains/login.keychain-db',
     }
     command = ('%(security)s -v %(command)s'
                ' -g -a %(account)s -s %(server)s %(keychain)s' % params)
@@ -132,7 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('--from_addr', default=None)
     parser.add_argument('--to', required=True)
     parser.add_argument('--subject', required=True)
-    parser.add_argument('--body')
+    parser.add_argument('--body', default="")
     args = parser.parse_args()
 
     # load the settings with given --from email or use default (first one in conf)
